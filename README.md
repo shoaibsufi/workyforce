@@ -1,7 +1,7 @@
-# eScience Lab Workforce Planner — Django App
+# WorkyForce
 
-A web application that replaces the Excel workforce planning spreadsheet with
-a proper database-backed web interface. Built with Django.
+A web application that replaces the Excel spreadsheet based planning spreadsheet with
+a database-backed web interface. Built with Django.
 
 ---
 
