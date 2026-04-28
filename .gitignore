@@ -1,3 +1,9 @@
+# No excel files - as these are source data
+*.xlsx 
+
+#No sqlite files - as this is the data - the source being public is ok - not the data - that needs to be somewhere private
+*.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
