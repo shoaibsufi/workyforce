@@ -1,0 +1,44 @@
+{#
+  planning/_allocation_table.html — A reusable "partial" template.
+
+  Django's 'include' tag lets you embed one template inside another.
+  This avoids repeating the allocation table HTML in multiple places.
+
+  Usage from a parent template:
+    include 'planning/_allocation_table.html' with allocations=my_list
+
+  The 'with' keyword passes extra context variables to the included template.
+  Conventionally, partial templates are prefixed with _ (underscore).
+#}
+<table>
+    <thead>
+        <tr>
+            <th>Project</th>
+            <th>From</th>
+            <th>To</th>
+            <th>FTE</th>
+            <th>PMs</th>
+            <th>Cost</th>
+            <th>WPs</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for alloc in allocations %}
+        <tr>
+            <td>
+                <a href="{% url 'planning:project_detail' alloc.project.pk %}">
+                    {{ alloc.project.name }}
+                </a>
+            </td>
+            <td>{{ alloc.start_date|date:"j M Y" }}</td>
+            <td>{{ alloc.end_date|date:"j M Y" }}</td>
+            <td>{% widthratio alloc.fte 1 100 %}%</td>
+            <td>{{ alloc.person_months|floatformat:2|default:"—" }}</td>
+            <td>{% if alloc.cost %}£{{ alloc.cost|floatformat:0 }}{% else %}—{% endif %}</td>
+            <td class="text-muted">{{ alloc.work_packages|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-muted">No allocations.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

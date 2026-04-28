@@ -1,0 +1,156 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}Projects — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<h1>📋 Projects</h1>
+
+<style>
+    /*
+      CSS TOOLTIP TECHNIQUE:
+      We use a <span> with class "tooltip-wrap" as the container.
+      Inside it sits the visible number and a hidden <span class="tooltip-box">.
+
+      On hover of the container:
+        - tooltip-box becomes visible (opacity 1, pointer-events auto)
+        - It's positioned absolutely relative to the container (position: relative)
+
+      This works in all browsers with no JavaScript at all.
+      The data-* attribute on the container isn't used here — the content
+      is a real child element, which means line breaks render correctly.
+    */
+    .tooltip-wrap {
+        position: relative;
+        display: inline-block;
+        cursor: help;
+        border-bottom: 1px dotted #3949ab;
+    }
+    .tooltip-box {
+        /* Hidden by default */
+        display: none;
+
+        /* Positioning: appears just above the number */
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+
+        /* Appearance */
+        background: #1a237e;
+        color: white;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        line-height: 1.6;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+        /* Small arrow pointing down */
+        pointer-events: none;
+    }
+    .tooltip-box::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #1a237e;
+    }
+    .tooltip-wrap:hover .tooltip-box {
+        display: block;
+    }
+</style>
+
+<div class="filters">
+    <strong>Filter:</strong>
+    <a href="{% url 'planning:project_list' %}?status=all"
+       class="{% if status_filter == 'all' %}active{% endif %}">All</a>
+    <a href="{% url 'planning:project_list' %}?status=active"
+       class="{% if status_filter == 'active' %}active{% endif %}">Active</a>
+    <a href="{% url 'planning:project_list' %}?status=ended"
+       class="{% if status_filter == 'ended' %}active{% endif %}">Ended</a>
+    <a href="{% url 'planning:project_list' %}?status=future"
+       class="{% if status_filter == 'future' %}active{% endif %}">Future</a>
+</div>
+
+<div class="card">
+    <p class="text-muted" style="margin-bottom: 1rem;">{{ projects.count }} project{{ projects.count|pluralize }} shown</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>R Code</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th>Staff</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>
+                    <a href="{% url 'planning:project_detail' project.pk %}">
+                        <strong>{{ project.name }}</strong>
+                    </a>
+                    {% if project.notes %}
+                    <br><span class="text-muted">{{ project.notes|truncatechars:60 }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if project.rcode %}<span class="tag">{{ project.rcode }}</span>
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ project.start_date|date:"M Y"|default:"—" }}</td>
+                <td>{{ project.end_date|date:"M Y"|default:"—" }}</td>
+                <td>
+                    {% if project.duration_months %}{{ project.duration_months }} mo
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if project.staff_tooltip %}
+                        <!--
+                          tooltip-wrap is the hover target.
+                          tooltip-box is the popup that appears on hover.
+                          project.staff_tooltip contains newline-separated names from the view.
+                          The 'linebreaksbr' filter converts \n to <br> tags so each
+                          person appears on their own line inside the tooltip.
+                        -->
+                        <span class="tooltip-wrap">
+                            {{ project.staff_count }}
+                            <span class="tooltip-box">{{ project.staff_tooltip|linebreaksbr }}</span>
+                        </span>
+                    {% else %}
+                        {{ project.staff_count }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if project.end_date %}
+                        {% if project.end_date < today %}
+                            <span class="badge badge-ended">Ended</span>
+                        {% elif project.start_date and project.start_date > today %}
+                            <span class="badge badge-future">Future</span>
+                        {% else %}
+                            <span class="badge badge-active">Active</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-future">No dates</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-muted" style="text-align:center; padding: 2rem;">
+                    No projects found.
+                    <a href="{% url 'planning:import_data' %}">Import the spreadsheet</a> to get started.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

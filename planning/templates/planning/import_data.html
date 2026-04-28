@@ -1,0 +1,38 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}Import Data — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<h1>📥 Import Spreadsheet</h1>
+
+<div class="card">
+    <p>This page imports data from the eScience Lab workforce planning Excel spreadsheet.</p>
+    <p style="margin-top: 0.5rem;">The import is <strong>idempotent</strong> — running it multiple times
+    will not create duplicate records. It uses Django's <code>get_or_create()</code>
+    to only add new data.</p>
+
+    <div style="margin-top: 1.5rem; padding: 1rem; background: #f5f6fa; border-radius: 6px;">
+        <p><strong>Before importing:</strong></p>
+        <ol style="margin: 0.5rem 0 0 1.5rem; line-height: 2;">
+            <li>Make sure the spreadsheet file is accessible on the server</li>
+            <li>Set the <code>SPREADSHEET_PATH</code> environment variable to the file path, or
+                place the file in the project root directory</li>
+            <li>Or run from the command line: <code>python manage.py import_spreadsheet --file=/path/to/file.xlsx</code></li>
+        </ol>
+    </div>
+
+    <div style="margin-top: 1.5rem;">
+        {#
+          CSRF (Cross-Site Request Forgery) protection:
+          Any HTML form that submits data via POST needs the csrf_token tag.
+          Django checks this hidden token to verify the form was submitted from
+          your own site, not from a malicious third-party page.
+          Without it, Django rejects the submission with a 403 Forbidden error.
+        #}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn">🚀 Run Import</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -4,6 +4,9 @@
 #No sqlite files - as this is the data - the source being public is ok - not the data - that needs to be somewhere private
 *.sqlite3
 
+# Mac finder preferences don't need tracking
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

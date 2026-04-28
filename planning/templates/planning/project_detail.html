@@ -1,0 +1,163 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}{{ project.name }} — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<p><a href="{% url 'planning:project_list' %}">← Back to all projects</a></p>
+
+<h1>{{ project.name }}</h1>
+
+{# Project overview card #}
+<div class="card">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <div class="text-muted">R Code</div>
+            <strong>{{ project.rcode|default:"—" }}</strong>
+        </div>
+        <div>
+            <div class="text-muted">Duration</div>
+            <strong>
+                {{ project.start_date|date:"M Y"|default:"?" }} —
+                {{ project.end_date|date:"M Y"|default:"?" }}
+                {% if project.duration_months %}
+                ({{ project.duration_months }} months)
+                {% endif %}
+            </strong>
+        </div>
+        <div>
+            <div class="text-muted">Person-Months</div>
+            <strong>
+                {{ project.pm_original|default:0 }} orig
+                {% if project.pm_additional %}+ {{ project.pm_additional }} add{% endif %}
+                — {{ project.pm_available|floatformat:1 }} available
+            </strong>
+        </div>
+        <div>
+            <div class="text-muted">Timesheet / Audit</div>
+            <strong>
+                TS: {% if project.is_ts_required %}Yes{% elif project.is_ts_required == False %}No{% else %}—{% endif %}
+                /
+                Audit: {% if project.is_audited %}Yes{% elif project.is_audited == False %}No{% else %}—{% endif %}
+            </strong>
+        </div>
+        {% if project.work_type %}
+        <div>
+            <div class="text-muted">Type</div>
+            <strong>{{ project.work_type }}</strong>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if project.notes %}
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+        <div class="text-muted">Notes</div>
+        {{ project.notes }}
+    </div>
+    {% endif %}
+</div>
+
+{# Budget section #}
+{% if budget %}
+<div class="card">
+    <h2>💰 Budget</h2>
+    <table>
+        <tr><td>DI Budget (A01)</td><td>£{{ budget.budget_di_original|default:0|floatformat:2 }}</td></tr>
+        <tr><td>DA Budget (A12)</td><td>£{{ budget.budget_da_original|default:0|floatformat:2 }}</td></tr>
+        {% if budget.budget_additional %}<tr><td>Additional</td><td>£{{ budget.budget_additional|floatformat:2 }}</td></tr>{% endif %}
+        <tr><th>Total</th><th>£{{ budget.total_budget|floatformat:2 }}</th></tr>
+    </table>
+</div>
+{% endif %}
+
+{# Staff allocations #}
+<div class="card">
+    <h2>👥 Staff Allocations</h2>
+    <p class="text-muted">Total person-months allocated: <strong>{{ total_pm|floatformat:2 }}</strong></p>
+    {% if allocations %}
+    <table>
+        <thead>
+            <tr><th>Person</th><th>From</th><th>To</th><th>FTE</th><th>PMs</th><th>Cost</th><th>WPs</th></tr>
+        </thead>
+        <tbody>
+            {% for alloc in allocations %}
+            <tr>
+                <td>
+                    <a href="{% url 'planning:staff_detail' alloc.staff_member.pk %}">
+                        {{ alloc.staff_member.name }}
+                    </a>
+                    <span class="text-muted">({{ alloc.staff_member.initials }})</span>
+                </td>
+                <td>{{ alloc.start_date|date:"M Y" }}</td>
+                <td>{{ alloc.end_date|date:"M Y" }}</td>
+                <td>{% widthratio alloc.fte 1 100 %}%</td>
+                <td>{{ alloc.person_months|floatformat:2|default:"—" }}</td>
+                <td>{% if alloc.cost %}£{{ alloc.cost|floatformat:0 }}{% else %}—{% endif %}</td>
+                <td><span class="text-muted">{{ alloc.work_packages|default:"—" }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No allocations recorded for this project.</p>
+    {% endif %}
+</div>
+
+{# Work packages #}
+{% if work_packages %}
+<div class="card">
+    <h2>📦 Work Packages</h2>
+    <table>
+        <thead><tr><th>WP</th><th>Title</th><th>Person-months</th></tr></thead>
+        <tbody>
+            {% for wp in work_packages %}
+            <tr>
+                <td><span class="tag">{{ wp.wp_number }}</span></td>
+                <td>{{ wp.title|default:"—" }}</td>
+                <td>{{ wp.person_months|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{# Budget swaps #}
+{% if swaps_out or swaps_in %}
+<div class="card">
+    <h2>🔄 Budget Swaps</h2>
+    {% if swaps_out %}
+    <p><strong>Outgoing (this project paid for someone else's time):</strong></p>
+    <table>
+        <thead><tr><th>To Project</th><th>Date</th><th>Amount</th><th>Notes</th></tr></thead>
+        <tbody>
+            {% for swap in swaps_out %}
+            <tr>
+                <td>{{ swap.to_project_name }}</td>
+                <td>{{ swap.date|date:"M Y"|default:"—" }}</td>
+                <td>£{{ swap.amount_gbp|floatformat:0 }}</td>
+                <td class="text-muted">{{ swap.notes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% if swaps_in %}
+    <p style="margin-top: 1rem;"><strong>Incoming (this project received budget from elsewhere):</strong></p>
+    <table>
+        <thead><tr><th>From Project</th><th>Date</th><th>Amount</th><th>Notes</th></tr></thead>
+        <tbody>
+            {% for swap in swaps_in %}
+            <tr>
+                <td>{{ swap.from_project_name }}</td>
+                <td>{{ swap.date|date:"M Y"|default:"—" }}</td>
+                <td>£{{ swap.amount_gbp|floatformat:0 }}</td>
+                <td class="text-muted">{{ swap.notes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

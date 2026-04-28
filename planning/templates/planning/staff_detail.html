@@ -1,0 +1,89 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}{{ person.name }} — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<p><a href="{% url 'planning:staff_list' %}">← Back to all staff</a></p>
+
+<h1>{{ person.name }} <span class="tag" style="font-size: 1rem;">{{ person.initials }}</span></h1>
+
+<div class="card">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+        <div>
+            <div class="text-muted">Employee No.</div>
+            <strong>{{ person.employee_number|default:"—" }}</strong>
+        </div>
+        <div>
+            <div class="text-muted">Type</div>
+            <strong>{{ person.staff_type|default:"—" }}</strong>
+        </div>
+        <div>
+            <div class="text-muted">Department</div>
+            <strong>{{ person.department|default:"—" }}</strong>
+        </div>
+        <div>
+            <div class="text-muted">PCM Until (confirmed)</div>
+            <strong>{{ person.pcm_until|date:"j M Y"|default:"N/A" }}</strong>
+        </div>
+        <div>
+            <div class="text-muted">PCM Until (projected)</div>
+            <strong>{{ person.pcm_projected_until|date:"j M Y"|default:"—" }}</strong>
+        </div>
+        <div>
+            <div class="text-muted">Timesheets Approved To</div>
+            <strong>{{ person.timesheets_approved_until|date:"j M Y"|default:"N/A" }}</strong>
+        </div>
+        <div>
+            <div class="text-muted">Total Recorded Cost</div>
+            <strong>£{{ total_cost|floatformat:2 }}</strong>
+        </div>
+    </div>
+    {% if person.notes %}
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+        <div class="text-muted">Notes</div>
+        {{ person.notes }}
+    </div>
+    {% endif %}
+</div>
+
+{% if allocations_current %}
+<div class="card">
+    <h2>✅ Current Allocations</h2>
+    {% include 'planning/_allocation_table.html' with allocations=allocations_current %}
+</div>
+{% endif %}
+
+{% if allocations_future %}
+<div class="card">
+    <h2>🔮 Future Allocations</h2>
+    {% include 'planning/_allocation_table.html' with allocations=allocations_future %}
+</div>
+{% endif %}
+
+{% if allocations_past %}
+<div class="card">
+    <h2>📚 Past Allocations ({{ allocations_past|length }})</h2>
+    {% include 'planning/_allocation_table.html' with allocations=allocations_past %}
+</div>
+{% endif %}
+
+{% if costs %}
+<div class="card">
+    <h2>💰 Cost History</h2>
+    <table>
+        <thead><tr><th>Valid From</th><th>Valid Until</th><th>Monthly Cost</th><th>Confidence</th></tr></thead>
+        <tbody>
+            {% for cost in costs %}
+            <tr>
+                <td>{{ cost.valid_from|date:"M Y" }}</td>
+                <td>{{ cost.valid_until|date:"M Y" }}</td>
+                <td>£{{ cost.monthly_cost|floatformat:2 }}</td>
+                <td>{{ cost.confidence }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

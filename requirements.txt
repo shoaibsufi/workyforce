@@ -1,0 +1,20 @@
+# requirements.txt — Python packages needed to run this project.
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# WHAT EACH PACKAGE DOES:
+#
+# django          — The web framework itself. Provides models, views,
+#                   templates, the admin panel, ORM, URL routing, etc.
+#
+# openpyxl        — Reads and writes .xlsx Excel files.
+#                   Used by the import_spreadsheet management command
+#                   to parse the workforce planning spreadsheet.
+#
+# (Optional extras for production deployment:)
+# gunicorn        — A production WSGI server (instead of Django's dev server)
+# whitenoise      — Serves static files in production without needing nginx
+
+django>=4.2,<5.0
+openpyxl>=3.1.0

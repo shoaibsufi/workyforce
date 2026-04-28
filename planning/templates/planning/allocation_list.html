@@ -1,0 +1,90 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}Allocations — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<h1>📅 All Allocations</h1>
+
+{#
+  Filter form.
+  Using method="get" puts the filters in the URL query string (?staff=SS&project=bio)
+  which makes the URL bookmarkable and shareable.
+#}
+<div class="card">
+    <div class="filters">
+        <strong>Filter:</strong>
+
+        {% if current_only %}
+            <a href="{% url 'planning:allocation_list' %}?staff={{ staff_filter }}&project={{ project_filter }}">
+                Show all dates
+            </a>
+        {% else %}
+            <a href="{% url 'planning:allocation_list' %}?current=1&staff={{ staff_filter }}&project={{ project_filter }}"
+               class="{% if current_only %}active{% endif %}">
+                Current only
+            </a>
+        {% endif %}
+
+        <form method="get" action="" style="display:flex; gap: 0.5rem; align-items: center;">
+            {% if current_only %}<input type="hidden" name="current" value="1">{% endif %}
+            <select name="staff" onchange="this.form.submit()" style="padding: 0.3rem 0.5rem; border-radius: 4px; border: 1px solid #c5cae9;">
+                <option value="">All staff</option>
+                {% for s in all_staff %}
+                <option value="{{ s.initials }}" {% if s.initials == staff_filter %}selected{% endif %}>
+                    {{ s.initials }} — {{ s.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <input type="text" name="project" placeholder="Project name..." value="{{ project_filter }}"
+                   style="padding: 0.35rem 0.6rem; border-radius: 4px; border: 1px solid #c5cae9;">
+            <button type="submit" class="btn" style="padding: 0.35rem 0.8rem;">Filter</button>
+            <a href="{% url 'planning:allocation_list' %}">Clear</a>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <p class="text-muted" style="margin-bottom: 1rem;">
+        {{ allocations.count }} allocation{{ allocations.count|pluralize }} found
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Person</th>
+                <th>Project</th>
+                <th>From</th>
+                <th>To</th>
+                <th>FTE</th>
+                <th>Person-months</th>
+                <th>Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alloc in allocations %}
+            <tr>
+                <td>
+                    <a href="{% url 'planning:staff_detail' alloc.staff_member.pk %}">
+                        {{ alloc.staff_member.initials }}
+                    </a>
+                </td>
+                <td>
+                    <a href="{% url 'planning:project_detail' alloc.project.pk %}">
+                        {{ alloc.project.name|truncatechars:40 }}
+                    </a>
+                </td>
+                <td>{{ alloc.start_date|date:"M Y" }}</td>
+                <td>{{ alloc.end_date|date:"M Y" }}</td>
+                <td>{% widthratio alloc.fte 1 100 %}%</td>
+                <td>{{ alloc.person_months|floatformat:2|default:"—" }}</td>
+                <td>{% if alloc.cost %}£{{ alloc.cost|floatformat:0 }}{% else %}—{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-muted" style="text-align:center; padding:2rem;">
+                No allocations found.
+            </td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

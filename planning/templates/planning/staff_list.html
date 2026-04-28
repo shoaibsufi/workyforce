@@ -1,0 +1,78 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}Staff — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<h1>👤 Staff Members</h1>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Initials</th>
+                <th>Employee No.</th>
+                <th>Type</th>
+                <th>Department</th>
+                <th>Current Projects</th>
+                <th>PCM Until</th>
+                <th>PCM Projected</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for person in staff %}
+            <tr>
+                <td>
+                    <a href="{% url 'planning:staff_detail' person.pk %}">
+                        <strong>{{ person.name }}</strong>
+                    </a>
+                </td>
+                <td><span class="tag">{{ person.initials }}</span></td>
+                <td>{{ person.employee_number|default:"—" }}</td>
+                <td>
+                    {% if person.staff_type == 'Academic' %}
+                        <span class="badge badge-academic">Academic</span>
+                    {% elif person.staff_type == 'Research' %}
+                        <span class="badge badge-research">Research</span>
+                    {% elif person.staff_type == 'PS' %}
+                        <span class="badge badge-ps">PS</span>
+                    {% else %}
+                        <span class="text-muted">{{ person.staff_type|default:"—" }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ person.department|default:"—" }}</td>
+                <td>
+                    {% for alloc in person.current_allocations %}
+                        <a href="{% url 'planning:project_detail' alloc.project.pk %}">
+                            <span class="tag">{{ alloc.project.name|truncatechars:25 }}</span>
+                        </a>
+                    {% empty %}
+                        <span class="text-muted">—</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% if person.pcm_until %}
+                        {{ person.pcm_until|date:"M Y" }}
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if person.pcm_projected_until %}
+                        {{ person.pcm_projected_until|date:"M Y" }}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-muted" style="text-align:center; padding: 2rem;">
+                    No staff found. <a href="{% url 'planning:import_data' %}">Import the spreadsheet</a> first.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

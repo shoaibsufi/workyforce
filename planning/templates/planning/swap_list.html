@@ -1,0 +1,69 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}Budget Swaps — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<h1>🔄 Budget Swaps</h1>
+<p class="text-muted">
+    Inter-project budget transfers — when one project pays for time that is
+    actually recorded against another project.
+</p>
+
+<div class="stat-grid" style="margin: 1.5rem 0;">
+    <div class="stat-card">
+        <div class="number">{{ swaps.count }}</div>
+        <div class="label">Total Swaps</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">£{{ total_swapped|floatformat:0 }}</div>
+        <div class="label">Total Swapped</div>
+    </div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>From Project</th>
+                <th>To Project</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Notes</th>
+                <th>Action to Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for swap in swaps %}
+            <tr>
+                <td>
+                    {% if swap.from_project %}
+                        <a href="{% url 'planning:project_detail' swap.from_project.pk %}">
+                            {{ swap.from_project_name }}
+                        </a>
+                    {% else %}
+                        {{ swap.from_project_name }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if swap.to_project %}
+                        <a href="{% url 'planning:project_detail' swap.to_project.pk %}">
+                            {{ swap.to_project_name }}
+                        </a>
+                    {% else %}
+                        {{ swap.to_project_name }}
+                    {% endif %}
+                </td>
+                <td>{{ swap.date|date:"j M Y"|default:"—" }}</td>
+                <td><strong>£{{ swap.amount_gbp|floatformat:0 }}</strong></td>
+                <td class="text-muted">{{ swap.notes|default:"—" }}</td>
+                <td class="text-muted">{{ swap.action_to_balance|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-muted" style="text-align:center;padding:2rem;">
+                No budget swaps recorded.
+            </td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

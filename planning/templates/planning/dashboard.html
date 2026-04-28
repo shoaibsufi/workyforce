@@ -1,0 +1,135 @@
+{% extends 'planning/base.html' %}
+{#
+  TEMPLATE INHERITANCE NOTE:
+  The 'extends' tag at the top of this file tells Django this template
+  inherits from base.html. Everything outside of 'block' tags is ignored.
+  Only the blocks defined here replace matching blocks in base.html.
+#}
+
+{% block title %}Dashboard — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<h1>📊 Workforce Planning Dashboard</h1>
+<p class="text-muted">{{ today|date:"l, j F Y" }}</p>
+
+{# Summary stats #}
+<div class="stat-grid" style="margin-top: 1.5rem;">
+    <div class="stat-card">
+        {# {{ variable }} outputs a Python variable passed in the context dict #}
+        <div class="number">{{ active_projects_count }}</div>
+        <div class="label">Active Projects</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ total_staff }}</div>
+        <div class="label">Staff Members</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ current_allocations.count }}</div>
+        <div class="label">Current Allocations</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ ending_soon.count }}</div>
+        <div class="label">Projects Ending Soon</div>
+    </div>
+</div>
+
+{# Projects ending in the next 3 months #}
+{% if ending_soon %}
+<div class="card">
+    <h2>⚠️ Projects Ending in the Next 3 Months</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>R Code</th>
+                <th>End Date</th>
+                <th>Days Left</th>
+            </tr>
+        </thead>
+        <tbody>
+            {# The 'for' tag loops over every item in the list #}
+            {% for project in ending_soon %}
+            <tr>
+                <td>
+                    {# 'url' tag generates a URL by its name — avoids hardcoding /projects/42/ #}
+                    <a href="{% url 'planning:project_detail' project.pk %}">{{ project.name }}</a>
+                </td>
+                <td><span class="tag">{{ project.rcode }}</span></td>
+                <td>{{ project.end_date|date:"j M Y" }}</td>
+                <td>
+                    {# 'timeuntil' is a built-in Django filter — outputs e.g. "42 days" #}
+                    {{ project.end_date|timeuntil }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{# Current allocations #}
+<div class="card">
+    <h2>👥 Currently Active Allocations</h2>
+    {% if current_allocations %}
+    <table>
+        <thead>
+            <tr>
+                <th>Person</th>
+                <th>Project</th>
+                <th>FTE</th>
+                <th>Until</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alloc in current_allocations %}
+            <tr>
+                <td>
+                    <a href="{% url 'planning:staff_detail' alloc.staff_member.pk %}">
+                        {{ alloc.staff_member.name }}
+                    </a>
+                    <span class="text-muted">({{ alloc.staff_member.initials }})</span>
+                </td>
+                <td>
+                    <a href="{% url 'planning:project_detail' alloc.project.pk %}">
+                        {{ alloc.project.name }}
+                    </a>
+                </td>
+                <td>
+                    {# widthratio tag: widthratio value max_value scale — here converts 0.5 FTE to 50 #}
+                    {% widthratio alloc.fte 1 100 %}%
+                </td>
+                <td>{{ alloc.end_date|date:"j M Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No current allocations found. Have you imported the spreadsheet yet?</p>
+    <a href="{% url 'planning:import_data' %}" class="btn">📥 Import Spreadsheet</a>
+    {% endif %}
+</div>
+
+{# Recent budget swaps #}
+{% if recent_swaps %}
+<div class="card">
+    <h2>💰 Recent Budget Swaps</h2>
+    <table>
+        <thead>
+            <tr><th>From</th><th>To</th><th>Date</th><th>Amount</th></tr>
+        </thead>
+        <tbody>
+            {% for swap in recent_swaps %}
+            <tr>
+                <td>{{ swap.from_project_name }}</td>
+                <td>{{ swap.to_project_name }}</td>
+                <td>{{ swap.date|date:"j M Y"|default:"—" }}</td>
+                <td>£{{ swap.amount_gbp|floatformat:0 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="margin-top: 0.8rem;"><a href="{% url 'planning:swap_list' %}">View all swaps →</a></p>
+</div>
+{% endif %}
+
+{% endblock %}

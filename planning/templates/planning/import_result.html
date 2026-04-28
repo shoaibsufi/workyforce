@@ -1,0 +1,30 @@
+{% extends 'planning/base.html' %}
+
+{% block title %}Import Result — eScience Lab Workforce Planner{% endblock %}
+
+{% block content %}
+<h1>📥 Import Result</h1>
+
+<div class="card">
+    {% if success %}
+        <div class="alert alert-success">
+            ✅ {{ message }}
+        </div>
+        <p style="margin-top: 1rem;">
+            <a href="{% url 'planning:dashboard' %}" class="btn">View Dashboard</a>
+            <a href="{% url 'planning:project_list' %}" style="margin-left: 1rem;">View Projects →</a>
+        </p>
+    {% else %}
+        <div class="alert alert-error">
+            ❌ {{ message }}
+        </div>
+        <p style="margin-top: 1rem;">
+            <a href="{% url 'planning:import_data' %}">← Try again</a>
+        </p>
+        <p class="text-muted" style="margin-top: 1rem;">
+            Tip: You can also run the import from the command line:<br>
+            <code>python manage.py import_spreadsheet --file=/path/to/spreadsheet.xlsx</code>
+        </p>
+    {% endif %}
+</div>
+{% endblock %}
